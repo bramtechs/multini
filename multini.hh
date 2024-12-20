@@ -86,10 +86,21 @@ private:
             return mHeaderOrPair.first;
         }
 
-        [[nodiscard]] auto getKeyValuePair() const noexcept
+        [[nodiscard]] auto getKey() const noexcept
         {
-            assert(mIsHeader);
-            return mHeaderOrPair;
+            assert(!mIsHeader);
+            return mHeaderOrPair.first;
+        }
+        
+        [[nodiscard]] auto getValue() const noexcept
+        {
+            assert(!mIsHeader);
+            return mHeaderOrPair.second;
+        }
+
+        [[nodiscard]] auto isValid() const noexcept
+        {
+            return mIsValid;
         }
 
     private:
