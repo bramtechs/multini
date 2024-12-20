@@ -1,4 +1,5 @@
 ﻿#pragma once
+#include <algorithm>
 #include <map>
 #include <ostream>
 #include <ranges>
@@ -40,16 +41,18 @@ private:
             , mIsHeader(line.starts_with("["))
         {
             if (mIsHeader) {
-                auto startCount = std::ranges::distance(line
-                    | std::views::take_while([](char c) { return c == '['; }));
-
-                auto endCount = std::ranges::distance(line
-                    | std::views::take_while([](char c) { return c == ']'; }));
+                const auto startCount = countPrefix(line, '[');
+                const auto endCount = countSuffix(line, ']');
 
                 if (startCount != endCount) {
                     addError("Line ", lineNum, ": Section header has unbalanced brackets. (", startCount, " vs ", endCount, ")");
                     // non-critical error, continue parsing
                 }
+
+                const auto startIndex = line.find_first_of('[') + startCount;
+                const auto lastIndex = line.find_last_of(']') - endCount + 1;
+
+                mHeaderOrPair.first = line.substr(startIndex, lastIndex - startIndex);
             }
         }
 
@@ -106,7 +109,7 @@ private:
                   return !line.empty();
               })
             | std::views::filter([](const auto& line) {
-                  return line.starts_with(";");
+                  return !line.starts_with(";");
               });
     }
 
@@ -116,6 +119,19 @@ private:
             | std::views::transform([errors](const auto&& it) {
                   return Line(std::get<0>(it), std::get<1>(it), errors);
               });
+    }
+
+    static auto countPrefix(const std::string_view& sv, char ch)
+    {
+        return std::ranges::distance(sv
+            | std::views::take_while([ch](char c) { return c == ch; }));
+    }
+
+    static auto countSuffix(const std::string_view& sv, char ch)
+    {
+        return std::ranges::distance(sv
+            | std::views::reverse
+            | std::views::take_while([ch](char c) { return c == ch; }));
     }
 
     ErrorBag mErrors {};

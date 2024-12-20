@@ -27,7 +27,7 @@ TEST(multini, ParseHeaderLine)
     ASSERT_EQ(line.getHeader(), "Section1");
 }
 
-TEST(multini, ParseHeaderLineMoreBraces)
+TEST(multini, ParseHeaderLineMoreBrackets)
 {
     const std::string_view input = "[[[Section1]]]";
 
@@ -36,7 +36,7 @@ TEST(multini, ParseHeaderLineMoreBraces)
     ASSERT_EQ(line.getHeader(), "Section1");
 }
 
-TEST(multini, ParseHeaderLineWithUnevenBracesShouldError)
+TEST(multini, ParseHeaderLineWithUnevenBracketsShouldError)
 {
     const std::string_view input = "[[[Section1]]]]]";
 
@@ -46,7 +46,7 @@ TEST(multini, ParseHeaderLineWithUnevenBracesShouldError)
     ASSERT_EQ(bag.str().empty(), false);
 }
 
-TEST(multini, ParseHeaderLineWithUnevenBracesShouldStillParse)
+TEST(multini, ParseHeaderLineWithUnevenBracketsShouldStillParse)
 {
     const std::string_view input = "[Section1]]]]]";
 
@@ -55,13 +55,37 @@ TEST(multini, ParseHeaderLineWithUnevenBracesShouldStillParse)
     ASSERT_EQ(line.getHeader(), "Section1");
 }
 
-TEST(multini, ParseHeaderLineWithInternalBraces)
+TEST(multini, CountLeadingBrackets)
+{
+    const std::string_view input = "[[[section1";
+    ASSERT_EQ(INIReader::countPrefix(input, '['), 3);
+}
+
+TEST(multini, CountLeadingBrackets2)
+{
+    const std::string_view input = "[[[ [[]section1]][";
+    ASSERT_EQ(INIReader::countPrefix(input, '['), 3);
+}
+
+TEST(multini, CountEndingBrackets)
+{
+    const std::string_view input = "[[[section1]]]";
+    ASSERT_EQ(INIReader::countSuffix(input, ']'), 3);
+}
+
+TEST(multini, CountEndingBrackets2)
+{
+    const std::string_view input = "[[[section]]]1]]]";
+    ASSERT_EQ(INIReader::countSuffix(input, ']'), 3);
+}
+
+TEST(multini, ParseHeaderLineWithInternalBrackets)
 {
     const std::string_view input = "[[#]]Section[[#]]";
 
     auto line = INIReader::Line(input);
     ASSERT_EQ(line.isHeader(), true);
-    ASSERT_EQ(line.getHeader(), "Section");
+    ASSERT_EQ(line.getHeader(), "#]]Section[[#");
 }
 
 TEST(multini, ParseHeaderLineWithSpaces)
