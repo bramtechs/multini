@@ -6,64 +6,27 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
-
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-        build_type: [Release]
-        c_compiler: [gcc, clang, cl]
-        include:
-          - os: windows-latest
-            c_compiler: cl
-            cpp_compiler: cl
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-        exclude:
-          - os: windows-latest
-            c_compiler: gcc
-          - os: windows-latest
-            c_compiler: clang
-          - os: ubuntu-latest
-            c_compiler: cl
-
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set reusable strings
-        id: strings
-        shell: bash
-        run: |
-          echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
-
+      - name: Install compiler
+        id: install_cc
+        uses: rlalik/setup-cpp-compiler@master
+        with:
+          compiler: latest
+        
       - name: Configure CMake
         run: >
-          cmake -B ${{ steps.strings.outputs.build-output-dir }}
-          -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-          -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
-          -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
+          cmake -B build
+          -DCMAKE_CXX_COMPILER=${{ steps.install_cc.outputs.cxx }}
+          -DCMAKE_C_COMPILER=${{ steps.install_cc.outputs.cc }}
+          -DCMAKE_BUILD_TYPE=Debug
           -S ${{ github.workspace }}
-
-      # Install latest compilers on Ubuntu
-      - name: Install latest GCC and Clang (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
-        run: |
-          sudo apt update
-          sudo apt install -y gcc-14 g++-14 clang-18
-          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
-          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 10
-          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 10
-          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 10
-
         
       - name: Build
-        run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
+        run: cmake --build build --parallel
 
       - name: Test
-        working-directory: ${{ steps.strings.outputs.build-output-dir }}
-        run: ctest --output-on-failure --build-config ${{ matrix.build_type }}
+        working-directory: build
+        run: ctest --output-on-failure
