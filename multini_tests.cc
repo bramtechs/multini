@@ -24,6 +24,7 @@ TEST(multini, ParseHeaderLine)
 
     auto line = INIReader::Line(input);
     ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.isValid(), true);
     ASSERT_EQ(line.getHeader(), "Section1");
 }
 
@@ -33,6 +34,7 @@ TEST(multini, ParseHeaderLineMoreBrackets)
 
     auto line = INIReader::Line(input);
     ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.isValid(), true);
     ASSERT_EQ(line.getHeader(), "Section1");
 }
 
@@ -43,6 +45,7 @@ TEST(multini, ParseHeaderLineWithUnevenBracketsShouldError)
     auto bag = INIReader::ErrorBag();
     auto line = INIReader::Line(input, 0, &bag);
     ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.isValid(), false);
     ASSERT_EQ(bag.str().empty(), false);
 }
 
@@ -52,7 +55,84 @@ TEST(multini, ParseHeaderLineWithUnevenBracketsShouldStillParse)
 
     auto line = INIReader::Line(input);
     ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.isValid(), false);
     ASSERT_EQ(line.getHeader(), "Section1");
+}
+
+TEST(multini, ParseKeyValuePairLine)
+{
+    const std::string_view input = "key1=value1";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), false);
+    ASSERT_EQ(line.isValid(), true);
+    ASSERT_EQ(line.getKey(), "key1");
+    ASSERT_EQ(line.getValue(), "value1");
+}
+
+TEST(multini, ParseKeyValuePairLineWithSpaces)
+{
+    const std::string_view input = "key1 = value";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), false);
+    ASSERT_EQ(line.getKey(), "key1");
+    ASSERT_EQ(line.getValue(), "value");
+}
+
+TEST(multini, ParseKeyValuePairLineWithSpacesInValue)
+{
+    const std::string_view input = "key1 =        value with spaces";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), false);
+    ASSERT_EQ(line.isValid(), true);
+    ASSERT_EQ(line.getKey(), "key1");
+    ASSERT_EQ(line.getValue(), "value with spaces");
+}
+
+TEST(multini, ParseKeyValuePairWithSpacesInKey)
+{
+    const std::string_view input = "key 1 = value";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), false);
+    ASSERT_EQ(line.isValid(), true);
+    ASSERT_EQ(line.getKey(), "key 1");
+    ASSERT_EQ(line.getValue(), "value");
+}
+
+TEST(multini, ParseKeyValuePairWithEqualsInValue)
+{
+    const std::string_view input = "key1 = value = 1";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), false);
+    ASSERT_EQ(line.isValid(), true);
+    ASSERT_EQ(line.getKey(), "key1");
+    ASSERT_EQ(line.getValue(), "value = 1");
+}
+
+TEST(multini, ParseKeyValuePairWithBracketsInValue)
+{
+    const std::string_view input = "key1 = value [1]";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), false);
+    ASSERT_EQ(line.isValid(), true);
+    ASSERT_EQ(line.getKey(), "key1");
+    ASSERT_EQ(line.getValue(), "value [1]");
+}
+
+TEST(multini, ParseKeyValuePairWithBracketsInKey)
+{
+    const std::string_view input = "key[1] = value";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), false);
+    ASSERT_EQ(line.isValid(), true);
+    ASSERT_EQ(line.getKey(), "key[1]");
+    ASSERT_EQ(line.getValue(), "value");
 }
 
 TEST(multini, CountLeadingBrackets)
