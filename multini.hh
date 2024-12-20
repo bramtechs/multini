@@ -10,6 +10,12 @@
 #include <vector>
 
 namespace multini {
+
+#ifdef MULTINI_TESTING
+#define private public
+#define protected public
+#endif
+
 /**
  * @brief INI reader that supports non-unique section names.
  * Uses std::multimap under the hood.
@@ -137,4 +143,10 @@ private:
     ErrorBag mErrors {};
     std::multimap<std::string, std::map<std::string, std::string>> mSections {};
 };
+
+#ifdef MULTINI_TESTING
+#undef private
+#undef protected
+#endif
+
 }

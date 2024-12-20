@@ -2,7 +2,7 @@
 #include <iostream>
 #include <string_view>
 
-#define private public
+#define MULTINI_TESTING
 #include "multini.hh"
 
 using namespace multini;
