@@ -5,6 +5,8 @@
 #define private public
 #include "multini.hh"
 
+using namespace multini;
+
 static constexpr std::string_view trimmed(std::string_view&& str)
 {
     while (!str.empty() && std::isspace(str.front()))
@@ -15,6 +17,64 @@ static constexpr std::string_view trimmed(std::string_view&& str)
 
     return str;
 }
+
+TEST(multini, ParseHeaderLine)
+{
+    const std::string_view input = "[Section1]";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.getHeader(), "Section1");
+}
+
+TEST(multini, ParseHeaderLineMoreBraces)
+{
+    const std::string_view input = "[[[Section1]]]";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.getHeader(), "Section1");
+}
+
+TEST(multini, ParseHeaderLineWithUnevenBracesShouldError)
+{
+    const std::string_view input = "[[[Section1]]]]]";
+
+    auto bag = INIReader::ErrorBag();
+    auto line = INIReader::Line(input, 0, &bag);
+    ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(bag.str().empty(), false);
+}
+
+TEST(multini, ParseHeaderLineWithUnevenBracesShouldStillParse)
+{
+    const std::string_view input = "[Section1]]]]]";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.getHeader(), "Section1");
+}
+
+TEST(multini, ParseHeaderLineWithInternalBraces)
+{
+    const std::string_view input = "[[#]]Section[[#]]";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.getHeader(), "Section");
+}
+
+TEST(multini, ParseHeaderLineWithSpaces)
+{
+    const std::string_view input = "[Section Title 1]";
+
+    auto line = INIReader::Line(input);
+    ASSERT_EQ(line.isHeader(), true);
+    ASSERT_EQ(line.getHeader(), "Section Title 1");
+}
+
+// TODO: test stray bracket should be an error
+// TODO: uncommented section should not parse
 
 TEST(multini, SplitLinesOfConfig)
 {
@@ -27,7 +87,7 @@ key2=value2
 key3=value3
 )");
 
-    auto view = multini::INIReader::splitLines(config);
+    auto view = INIReader::splitLines(config);
     auto lines = std::vector<std::string_view>(view.begin(), view.end());
 
     ASSERT_EQ(lines.size(), 6);
@@ -56,7 +116,7 @@ key2=value2
 ;; test
 )");
 
-    auto view = multini::INIReader::filterLines(config);
+    auto view = INIReader::filterLines(config);
     auto lines = std::vector<std::string_view>(view.begin(), view.end());
 
     ASSERT_EQ(lines.size(), 3);
@@ -73,5 +133,5 @@ TEST(multini, ConfigShouldHaveSection)
 key1=value1
 )");
 
-    multini::INIReader reader(config);
+    INIReader reader(config);
 }
