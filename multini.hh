@@ -33,6 +33,19 @@ public:
     }
 
 private:
+    static auto countPrefix(const std::string_view& sv, char ch)
+    {
+        return std::ranges::distance(sv
+            | std::views::take_while([ch](char c) { return c == ch; }));
+    }
+
+    static auto countSuffix(const std::string_view& sv, char ch)
+    {
+        return std::ranges::distance(sv
+            | std::views::reverse
+            | std::views::take_while([ch](char c) { return c == ch; }));
+    }
+
     class Line {
     public:
         Line(const std::string_view& line, int lineNum = 0, ErrorBag* errors = nullptr)
@@ -119,19 +132,6 @@ private:
             | std::views::transform([errors](const auto&& it) {
                   return Line(std::get<0>(it), std::get<1>(it), errors);
               });
-    }
-
-    static auto countPrefix(const std::string_view& sv, char ch)
-    {
-        return std::ranges::distance(sv
-            | std::views::take_while([ch](char c) { return c == ch; }));
-    }
-
-    static auto countSuffix(const std::string_view& sv, char ch)
-    {
-        return std::ranges::distance(sv
-            | std::views::reverse
-            | std::views::take_while([ch](char c) { return c == ch; }));
     }
 
     ErrorBag mErrors {};
