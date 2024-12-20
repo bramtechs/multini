@@ -49,6 +49,18 @@ jobs:
           -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
           -S ${{ github.workspace }}
 
+      # Install latest compilers on Ubuntu
+      - name: Install latest GCC and Clang (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          sudo apt update
+          sudo apt install -y gcc-14 g++-14 clang-18
+          sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-14 10
+          sudo update-alternatives --install /usr/bin/g++ g++ /usr/bin/g++-14 10
+          sudo update-alternatives --install /usr/bin/clang clang /usr/bin/clang-18 10
+          sudo update-alternatives --install /usr/bin/clang++ clang++ /usr/bin/clang++-18 10
+
+        
       - name: Build
         run: cmake --build ${{ steps.strings.outputs.build-output-dir }} --config ${{ matrix.build_type }}
 
