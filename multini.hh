@@ -72,6 +72,14 @@ private:
                 const auto lastIndex = line.find_last_of(']') - endCount + 1;
 
                 mHeaderOrPair.first = line.substr(startIndex, lastIndex - startIndex);
+            } else {
+                std::string_view key, value;
+
+                const auto startIndex = line.find_first_not_of(' ');
+                const auto equalsIndex = line.find_first_of('=');
+
+                key = line.substr(startIndex, equalsIndex - startIndex);
+                value = line.substr(equalsIndex + 1);
             }
         }
 
@@ -91,7 +99,7 @@ private:
             assert(!mIsHeader);
             return mHeaderOrPair.first;
         }
-        
+
         [[nodiscard]] auto getValue() const noexcept
         {
             assert(!mIsHeader);
@@ -119,16 +127,26 @@ private:
         std::pair<std::string, std::string> mHeaderOrPair;
     };
 
+    static auto stripLine(const std::string_view& sv)
+    {
+        const auto IsSpace = [](char c) {
+            return std::isspace(static_cast<unsigned char>(c));
+        };
+
+        const auto startIndex = std::ranges::distance(sv
+            | std::views::take_while(IsSpace));
+        const auto endIndex = std::ranges::distance(sv
+            | std::views::reverse | std::views::take_while(IsSpace));
+
+        return sv.substr(startIndex, sv.size() - startIndex - endIndex);
+    }
+
     static auto splitLines(const std::string_view& sv)
     {
         return sv
             | std::views::split('\n')
-            | std::views::transform([](const auto& line) {
-                  auto trimmedLine = std::string_view(line.begin(), line.end());
-                  if (!trimmedLine.empty() && trimmedLine.back() == '\r') {
-                      trimmedLine.remove_suffix(1);
-                  }
-                  return trimmedLine;
+            | std::views::transform([](const auto&& line) {
+                  return stripLine(std::string_view(line.begin(), line.end()));
               });
     }
 
@@ -159,5 +177,4 @@ private:
 #undef private
 #undef protected
 #endif
-
 }

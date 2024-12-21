@@ -18,6 +18,22 @@ static constexpr std::string_view trimmed(std::string_view&& str)
     return str;
 }
 
+TEST(multini, TestStripLine)
+{
+    const std::string_view input = "  [  Section1  ]  ";
+    const std::string_view expected = "[  Section1  ]";
+
+    ASSERT_EQ(INIReader::stripLine(input), expected);
+}
+
+TEST(multini, TestStripLine2)
+{
+    const std::string_view input = "\t\t\t [Section 1]  ";
+    const std::string_view expected = "[Section 1]";
+
+    ASSERT_EQ(INIReader::stripLine(input), expected);
+}
+
 TEST(multini, ParseHeaderLine)
 {
     const std::string_view input = "[Section1]";
@@ -82,7 +98,7 @@ TEST(multini, ParseKeyValuePairLineWithSpaces)
 
 TEST(multini, ParseKeyValuePairLineWithSpacesInValue)
 {
-    const std::string_view input = "key1 =        value with spaces";
+    const std::string_view input = "key1 =        value with spaces   ";
 
     auto line = INIReader::Line(input);
     ASSERT_EQ(line.isHeader(), false);
