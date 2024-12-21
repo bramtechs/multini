@@ -80,6 +80,9 @@ private:
 
                 key = line.substr(startIndex, equalsIndex - startIndex);
                 value = line.substr(equalsIndex + 1);
+
+                mHeaderOrPair.first = stripLine(key);
+                mHeaderOrPair.second = stripLine(value);
             }
         }
 
