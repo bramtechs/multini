@@ -7,7 +7,6 @@
 #include <string>
 #include <string_view>
 #include <utility>
-#include <vector>
 
 namespace multini {
 
@@ -50,6 +49,20 @@ private:
         return std::ranges::distance(sv
             | std::views::reverse
             | std::views::take_while([ch](char c) { return c == ch; }));
+    }
+
+    static auto stripLine(const std::string_view& sv)
+    {
+        const auto IsSpace = [](char c) {
+            return std::isspace(static_cast<unsigned char>(c));
+        };
+
+        const auto startIndex = std::ranges::distance(sv
+            | std::views::take_while(IsSpace));
+        const auto endIndex = std::ranges::distance(sv
+            | std::views::reverse | std::views::take_while(IsSpace));
+
+        return sv.substr(startIndex, sv.size() - startIndex - endIndex);
     }
 
     class Line {
@@ -130,20 +143,6 @@ private:
         std::pair<std::string, std::string> mHeaderOrPair;
     };
 
-    static auto stripLine(const std::string_view& sv)
-    {
-        const auto IsSpace = [](char c) {
-            return std::isspace(static_cast<unsigned char>(c));
-        };
-
-        const auto startIndex = std::ranges::distance(sv
-            | std::views::take_while(IsSpace));
-        const auto endIndex = std::ranges::distance(sv
-            | std::views::reverse | std::views::take_while(IsSpace));
-
-        return sv.substr(startIndex, sv.size() - startIndex - endIndex);
-    }
-
     static auto splitLines(const std::string_view& sv)
     {
         return sv
@@ -166,9 +165,9 @@ private:
 
     static auto parseLines(const std::string_view& sv, ErrorBag* errors = nullptr)
     {
-        return std::views::zip(filterLines(sv), std::views::iota(1))
+        return std::views::enumerate(filterLines(sv))
             | std::views::transform([errors](const auto&& it) {
-                  return Line(std::get<0>(it), std::get<1>(it), errors);
+                  return Line(std::get<1>(it), std::get<0>(it), errors);
               });
     }
 

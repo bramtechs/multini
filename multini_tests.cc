@@ -193,6 +193,29 @@ TEST(multini, ParseHeaderLineWithSpaces)
     ASSERT_EQ(line.getHeader(), "Section Title 1");
 }
 
+TEST(multini, ParseLines)
+{
+    const std::string_view input = R"(
+[section1]
+key1=value1
+)";
+
+    auto lines = std::vector<INIReader::Line>();
+    std::ranges::for_each(INIReader::parseLines(input), [&lines](auto&& it) {
+        lines.emplace_back(it);
+    });
+
+    ASSERT_EQ(lines.size(), 2);
+    ASSERT_EQ(lines[0].isValid(), true);
+    ASSERT_EQ(lines[0].isHeader(), true);
+    ASSERT_EQ(lines[0].getHeader(), "section1");
+
+    ASSERT_EQ(lines[1].isValid(), true);
+    ASSERT_EQ(lines[1].isHeader(), false);
+    ASSERT_EQ(lines[1].getKey(), "key1");
+    ASSERT_EQ(lines[1].getValue(), "value1");
+}
+
 // TODO: test stray bracket should be an error
 // TODO: uncommented section should not parse
 
