@@ -165,9 +165,9 @@ private:
 
     static auto parseLines(const std::string_view& sv, ErrorBag* errors = nullptr)
     {
-        return std::views::enumerate(filterLines(sv))
+        return std::views::zip(filterLines(sv), std::views::iota(1))
             | std::views::transform([errors](const auto&& it) {
-                  return Line(std::get<1>(it), std::get<0>(it), errors);
+                  return Line(std::get<0>(it), std::get<1>(it), errors);
               });
     }
 
