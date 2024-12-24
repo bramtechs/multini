@@ -4,6 +4,20 @@ project (multini)
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+add_library(${PROJECT_NAME} INTERFACE
+  multini.hh
+)
+target_include_directories(${PROJECT_NAME} INTERFACE
+  ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
+# Check if cmake is being used directly or via add_subdirectory
+if(NOT MULTINI_TESTS AND CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(MULTINI_TESTS ON)
+endif()
+
+if (MULTINI_TESTS)
+
 include(FetchContent)
 FetchContent_Declare(
   googletest
@@ -21,8 +35,11 @@ add_executable (multini_tests multini_tests.cc multini.hh)
 
 target_link_libraries(
    multini_tests
+   ${PROJECT_NAME}
    GTest::gtest_main
 )
 
 include(GoogleTest)
 gtest_discover_tests(multini_tests)
+
+endif()
