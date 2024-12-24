@@ -5,6 +5,8 @@
 #define MULTINI_TESTING
 #include "multini.hh"
 
+#include <bits/ranges_algo.h>
+
 using namespace multini;
 
 static constexpr std::string_view trimmed(std::string_view&& str)
@@ -276,5 +278,11 @@ TEST(multini, ConfigShouldHaveSection)
 key1=value1
 )");
 
-    INIReader reader(config);
+    INIReader::ErrorBag bag {};
+    UsedMultiMap map;
+    INIReader::fillMultimap(config, map, bag);
+
+    ASSERT_TRUE(map.contains("section1"));
+    ASSERT_EQ(map.find("section1")->second.at("key1"), "value1");
+    ASSERT_TRUE(bag.str().empty());
 }

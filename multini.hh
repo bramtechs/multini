@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <algorithm>
 #include <map>
 #include <ostream>
 #include <ranges>
@@ -15,11 +14,13 @@ namespace multini {
 #define protected public
 #endif
 
+using UsedMultiMap = std::multimap<std::string, std::map<std::string, std::string>>;
+
 /**
  * @brief INI reader that supports non-unique section names.
  * Uses std::multimap under the hood.
  */
-class INIReader {
+class INIReader : public UsedMultiMap {
 public:
     using ErrorBag = std::stringstream;
 
@@ -77,7 +78,11 @@ private:
                 const auto endCount = countSuffix(line, ']');
 
                 if (startCount != endCount) {
-                    addError("Line ", lineNum, ": Section header has unbalanced brackets. (", startCount, " vs ", endCount, ")");
+                    if (mErrors) {
+                        *mErrors << "Line " << lineNum << ": Section header has unbalanced brackets"
+                                 << "(" << startCount << " vs " << endCount << ")\n";
+                    }
+                    mIsValid = false;
                     // non-critical error, continue parsing
                 }
 
@@ -128,15 +133,6 @@ private:
         }
 
     private:
-        template<typename... Args>
-        void addError(Args&&... args)
-        {
-            mIsValid = false;
-            if (mErrors) {
-                ((*mErrors) << ... << args);
-            }
-        }
-
         ErrorBag* mErrors;
         bool mIsValid;
         bool mIsHeader;
@@ -171,8 +167,35 @@ private:
               });
     }
 
+    static void fillMultimap(const std::string_view& sv, UsedMultiMap& map, ErrorBag& errors)
+    {
+        using ActiveSection = std::pair<
+            std::string,
+            std::map<std::string, std::string>>;
+
+        std::optional<ActiveSection> active = std::nullopt;
+        for (const Line& line : parseLines(sv)) {
+            if (line.isHeader()) {
+                if (active.has_value()) {
+                    // commit section to multimap
+                    map.emplace(active->first, active->second);
+                } else {
+                    active = ActiveSection(line.getHeader(), {});
+                }
+            } else if (active.has_value()) {
+                active->second.emplace(line.getKey(), line.getValue());
+            } else {
+                errors << "Entry " << line.getKey() << "=" << line.getValue()
+                       << " is placed before section header\n";
+            }
+        }
+        // commit last section
+        if (active.has_value()) {
+            map.emplace(active->first, active->second);
+        }
+    }
+
     ErrorBag mErrors {};
-    std::multimap<std::string, std::map<std::string, std::string>> mSections {};
 };
 
 #ifdef MULTINI_TESTING
