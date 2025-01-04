@@ -14,7 +14,7 @@ using namespace multini;
 
 int main(int argc, char** argv)
 {
-    std::ifstream file("config.ini", std::ios::in);
+    std::ifstream file("grocery_list.ini", std::ios::in);
     if (!file.is_open()) {
         std::cerr << "Failed to open file\n";
         return EXIT_FAILURE;
@@ -30,7 +30,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // INIReader uses an underlying std::multimap
+    // INIReader inherits std::multimap
     // https://en.cppreference.com/w/cpp/container/multimap
 
     for (const auto& [header, content] : reader) {

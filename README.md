@@ -6,17 +6,19 @@ Written in bleeding-edge C++23.
 
 ## Example
 
-config.ini
+grocery_list.ini
 ```ini
-[section1]
-key1=value1
-key2=value2
+[apple]
+price=0.50 euro
+color=red
 
-[section1]
-key3=value3
+[apple]
+price=0.70 euro
+color=green
 
-[section2]
-hello=world
+[milk]
+price=3.00 euro
+volume=0.5 liters
 ```
 
 demo.cc
@@ -31,7 +33,7 @@ using namespace multini;
 
 int main(int argc, char** argv)
 {
-    std::ifstream file("config.ini", std::ios::in);
+    std::ifstream file("grocery_list.ini", std::ios::in);
     if (!file.is_open()) {
         std::cerr << "Failed to open file\n";
         return EXIT_FAILURE;
@@ -47,7 +49,7 @@ int main(int argc, char** argv)
         return EXIT_FAILURE;
     }
 
-    // INIReader uses an underlying std::multimap
+    // INIReader inherits std::multimap
     // https://en.cppreference.com/w/cpp/container/multimap
 
     for (const auto& [header, content] : reader) {
@@ -63,11 +65,13 @@ int main(int argc, char** argv)
 
 output
 ```
-found header: section1
-  with entry: key1=value1
-  with entry: key2=value2
-found header: section1
-  with entry: key3=value3
-found header: section2
-  with entry: hello=world
+found header: apple
+  with entry: color=red
+  with entry: price=0.50 euro
+found header: apple
+  with entry: color=green
+  with entry: price=0.70 euro
+found header: milk
+  with entry: price=3.00 euro
+  with entry: volume=0.5 liters
 ```
