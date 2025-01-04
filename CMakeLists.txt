@@ -38,10 +38,23 @@ if (CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
   include(GoogleTest)
   gtest_discover_tests(multini_tests)
 
+  add_executable (multini_demo
+    demo.cc
+  )
+
+  target_link_libraries(multini_demo PRIVATE
+    multini
+  )
+
   if (WIN32 AND MSVC)
     # change default working directory in Visual Studio to repository root.
-    set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    set_property(TARGET multini_demo PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+    set_property(TARGET multini_tests PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}")
+
     # change default starting project in Visual Studio
-    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT multini_tests)
+    set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT multini_demo)
+
+    message("Configured Visual Studio defaults")
   endif()
+
 endif()

@@ -1,4 +1,12 @@
-﻿#pragma once
+﻿/*
+ * Copyright (c) 2025. Doomhowl Interactive - bramtechs/brambasiel
+ * MIT License. Absolutely no warranty.
+ *
+ * File created on: 20-12-2024
+ */
+
+#pragma once
+#include <cassert>
 #include <map>
 #include <optional>
 #include <ostream>
