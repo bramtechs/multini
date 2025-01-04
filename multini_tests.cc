@@ -1,11 +1,10 @@
-﻿#include <gtest/gtest.h>
+﻿#include <algorithm>
+#include <gtest/gtest.h>
 #include <iostream>
 #include <string_view>
 
 #define MULTINI_TESTING
 #include "multini.hh"
-
-#include <bits/ranges_algo.h>
 
 using namespace multini;
 
@@ -279,10 +278,42 @@ key1=value1
 )");
 
     INIReader::ErrorBag bag {};
-    UsedMultiMap map;
+    IniReaderUsedContainer map;
     INIReader::fillMultimap(config, map, bag);
 
     ASSERT_TRUE(map.contains("section1"));
     ASSERT_EQ(map.find("section1")->second.at("key1"), "value1");
     ASSERT_TRUE(bag.str().empty());
+}
+
+TEST(multini, IntegrationTestWith2UniqueSections)
+{
+    const std::string_view config = trimmed(R"(
+[section1]
+key1=value1
+key2=value2
+
+[section2]
+key3=value3
+    )");
+
+    multini::INIReader reader(config);
+    if (reader.hasErrors()) {
+        std::cerr << reader.errors() << '\n';
+        FAIL();
+    }
+    ASSERT_EQ(reader.size(), 2);
+    ASSERT_TRUE(reader.contains("section1"));
+    ASSERT_TRUE(reader.contains("section2"));
+
+    ASSERT_TRUE(reader.contains("section1"));
+    ASSERT_TRUE(reader.find("section1")->second.contains("key1"));
+    ASSERT_EQ(reader.find("section1")->second.find("key1")->second, "value1");
+
+    ASSERT_TRUE(reader.find("section1")->second.contains("key2"));
+    ASSERT_EQ(reader.find("section1")->second.find("key2")->second, "value2");
+
+    ASSERT_TRUE(reader.contains("section2"));
+    ASSERT_TRUE(reader.find("section2")->second.contains("key3"));
+    ASSERT_EQ(reader.find("section2")->second.find("key3")->second, "value3");
 }

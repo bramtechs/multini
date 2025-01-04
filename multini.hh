@@ -1,5 +1,6 @@
 ﻿#pragma once
 #include <map>
+#include <optional>
 #include <ostream>
 #include <ranges>
 #include <sstream>
@@ -14,18 +15,19 @@ namespace multini {
 #define protected public
 #endif
 
-using UsedMultiMap = std::multimap<std::string, std::map<std::string, std::string>>;
+using IniReaderUsedContainer = std::multimap<std::string, std::map<std::string, std::string>>;
 
 /**
  * @brief INI reader that supports non-unique section names.
  * Uses std::multimap under the hood.
  */
-class INIReader : public UsedMultiMap {
+class INIReader : public IniReaderUsedContainer {
 public:
     using ErrorBag = std::stringstream;
 
     INIReader(const std::string_view& sv)
     {
+        fillMultimap(sv, *this, mErrors);
     }
 
     [[nodiscard]] auto hasErrors() const noexcept
@@ -167,7 +169,7 @@ private:
               });
     }
 
-    static void fillMultimap(const std::string_view& sv, UsedMultiMap& map, ErrorBag& errors)
+    static void fillMultimap(const std::string_view& sv, IniReaderUsedContainer& map, ErrorBag& errors)
     {
         using ActiveSection = std::pair<
             std::string,
@@ -179,9 +181,8 @@ private:
                 if (active.has_value()) {
                     // commit section to multimap
                     map.emplace(active->first, active->second);
-                } else {
-                    active = ActiveSection(line.getHeader(), {});
                 }
+                active = ActiveSection(line.getHeader(), {});
             } else if (active.has_value()) {
                 active->second.emplace(line.getKey(), line.getValue());
             } else {
@@ -189,6 +190,7 @@ private:
                        << " is placed before section header\n";
             }
         }
+
         // commit last section
         if (active.has_value()) {
             map.emplace(active->first, active->second);
