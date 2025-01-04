@@ -341,5 +341,7 @@ key3=value3
     ASSERT_EQ(reader.lower_bound("section1")->second.find("key1")->second, "value1");
     ASSERT_EQ(reader.lower_bound("section1")->second.find("key2")->second, "value2");
 
-    ASSERT_EQ(reader.upper_bound("section1")->second.find("key3")->second, "value3");
+    auto it = reader.lower_bound("section1");
+    std::advance(it, 1);
+    ASSERT_EQ(it->second.find("key3")->second, "value3");
 }
