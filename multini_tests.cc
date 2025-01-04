@@ -4,7 +4,7 @@
 #include <string_view>
 
 #define MULTINI_TESTING
-#include "multini.hh"
+#include <multini.hh>
 
 using namespace multini;
 
@@ -316,4 +316,30 @@ key3=value3
     ASSERT_TRUE(reader.contains("section2"));
     ASSERT_TRUE(reader.find("section2")->second.contains("key3"));
     ASSERT_EQ(reader.find("section2")->second.find("key3")->second, "value3");
+}
+
+TEST(multini, IntegrationTestWith2EquallyNamedSections)
+{
+    const std::string_view config = trimmed(R"(
+[section1]
+key1=value1
+key2=value2
+
+[section1]
+key3=value3
+    )");
+
+    multini::INIReader reader(config);
+    if (reader.hasErrors()) {
+        std::cerr << reader.errors() << '\n';
+        FAIL();
+    }
+    ASSERT_EQ(reader.size(), 2);
+    ASSERT_TRUE(reader.contains("section1"));
+    ASSERT_EQ(reader.count("section1"), 2);
+
+    ASSERT_EQ(reader.lower_bound("section1")->second.find("key1")->second, "value1");
+    ASSERT_EQ(reader.lower_bound("section1")->second.find("key2")->second, "value2");
+
+    ASSERT_EQ(reader.upper_bound("section1")->second.find("key3")->second, "value3");
 }
