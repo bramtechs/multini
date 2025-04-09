@@ -17,7 +17,7 @@ price=0.70 euro
 color=green
 
 [milk]
-price=3.00 euro
+price=1.00 euro
 volume=0.5 liters
 ```
 
@@ -72,6 +72,6 @@ found header: apple
   with entry: color=green
   with entry: price=0.70 euro
 found header: milk
-  with entry: price=3.00 euro
+  with entry: price=1.00 euro
   with entry: volume=0.5 liters
 ```
