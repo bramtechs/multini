@@ -1,6 +1,6 @@
 # multini
 
-Single-header INI config file reader that supports duplicate section names.
+Single-header INI config file reader that supports duplicate section names and is based on [std::multimap](https://en.cppreference.com/w/cpp/container/multimap).
 
 Written in bleeding-edge C++23.
 
